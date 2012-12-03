@@ -51,8 +51,8 @@ var Sapin = function(scene)
             scope.particlesGeo.vertices.push( vertex );
         };
     }
-
-    material = new THREE.ParticleBasicMaterial( { size: 1, map: sprite, blending:THREE.AdditiveBlending, transparent : true } );
+    // map: sprite, blending:THREE.AdditiveBlending, transparent : true 
+    material = new THREE.ParticleBasicMaterial( { size: .3, color:0xFFFFFF } );
     particleSystem = new THREE.ParticleSystem(scope.particlesGeo, material);
     
     scene.add( particleSystem );
