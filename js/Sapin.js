@@ -31,6 +31,7 @@ var Sapin = function(scene)
     this.particlesGeo = new THREE.Geometry();
     this.values = [];
     
+    
 
     for (var i = 1; i < vectors.length; i++) {
         var start = vectors[i-1]; 

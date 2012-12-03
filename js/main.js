@@ -6,9 +6,12 @@ windowHalfY = $(window).height()/2,
 isWebGL = Detector.webgl,
 tanFOV, windowHeight,
 stats, container, camera, scene, renderer, composer, analyser, renderTargetParameters,
-state = 0, 
+effectFilm,
+state = 0,
+treeCount = 0, 
+heartTree,
 cameraOffset = {x:0,y:0,z:0};
-
+cameraPower = {x:80,y:60,z:70};
 
 
 $(document).ready(function() 
@@ -48,8 +51,8 @@ function initScene(){
 	
 	// postprocessing
 	var renderModel = new THREE.RenderPass( scene, camera );
-	var effectBloom = new THREE.BloomPass( 0.95 );
-	var effectFilm = new THREE.FilmPass( 1, 1, 1448, false );
+	var effectBloom = new THREE.BloomPass( 0.95, 25, 4, 1024 );
+	effectFilm = new THREE.FilmPass( 1, 1, screenHeight*2, true );
 	effectFocus = new THREE.ShaderPass( THREE.FocusShader );
 	effectFocus.uniforms[ "screenWidth" ].value = screenWidth;
 	effectFocus.uniforms[ "screenHeight" ].value = screenHeight;
@@ -100,12 +103,12 @@ function init() {
 	cameraZOffset = 105;
 	cameraXOffset = 0;
 	for (var i = 0; i < 10; i++) {
-		h = Math.random()*2+.5;
+		h = Math.random()*1.8+.5;
 		cube = new THREE.Mesh(
-	   		new THREE.CubeGeometry( Math.random()*3+1, h, Math.random()*3+1, 1, 1, 1 ),
+	   		new THREE.CubeGeometry( Math.random()*2.9+.9, h, Math.random()*2.9+.9, 1, 1, 1 ),
 	    	new THREE.MeshBasicMaterial( {wireframe:true, color :Math.random()*0xFFFFFF} )
 		);
-		cube.position.y = h/2-1;
+		cube.position.y = h/2;
 		cube.rotation.y = Math.PI*Math.random();
 		radius = Math.random()*12+7;
 		angle = (i/10*Math.PI*2)+Math.PI/8*Math.random();
@@ -117,6 +120,8 @@ function init() {
 	sapin = new Sapin(scene);
 	star = new Star(scene);	
 
+	
+
 	var audio = new Audio();
 	audio.addEventListener('canplay', function() {
   		setTimeout(function() {  
@@ -124,45 +129,107 @@ function init() {
   			setTimeout(function() { 
   				$('body').css('cursor','pointer'); 
   				$(window).click(function(e){
-	  				$('body').css('cursor','auto');
-	  				if(state==1){
+  					console.log("bouboup");
+	  				if(state==4){
+	  					star.jinglebells();
+	  					state = 5;
+	  				}
+	  				if(state==5){
+	  					star.jinglebells();
+	  					state = 6;
+	  				}
+	  				if(state==6){
+	  					star.author();
+	  					state = 7;
+	  				}
+	  				if(state==7){
+	  					star.merryChristmas();
+	  					state = 8;	
+	  				}
+	  				if(state>=1){
 	  					return;
 	  				}
+	  				state=1;
+	  				$('body').css('cursor','auto');
+	  				effectFilm.uniforms.grayscale.value = false;
 					TweenLite.to(cameraOffset, 2.5, {y : 25, z : 75, x : 0});
-	  				setTimeout(function() { state = 1; },4000);
+	  				setTimeout(function() { state = 2; },4000);
 	  				star.randomize(139,93);
 	    			audio.play();
+					TweenLite.to(cameraPower, 3, {y : 95, z : 95, x : 110});
 	  			})
   			},1000);
   		}, 1200);
     }, false);
 
 	audio.src = 'sfx/music.mp3';
-	audio.controls = true;
+	audio.controls = false;
 	audio.autoplay = false;
 	document.body.appendChild(audio);
+
+	stats.update();
 	var context = new webkitAudioContext();
 	analyser = context.createAnalyser();
 
-	var source = context.createMediaElementSource(audio);
-	source.connect(analyser);
-	analyser.connect(context.destination);
+	window.addEventListener('load', function(e) {
+		  var source = context.createMediaElementSource(audio);
+		  source.connect(analyser);
+		  analyser.connect(context.destination);
+	}, false);
 }
 
 function animate() {
 	var coeff = 0.05;
-	camera.position.y += ((mouseY/screenHeight)*60+cameraOffset.y-camera.position.y)*coeff;
-	camera.position.z += ((mouseY/screenHeight)*70+cameraOffset.z-camera.position.z)*coeff;//45
-	camera.position.x += ((mouseX/screenWidth)*80+cameraOffset.x-camera.position.x)*coeff;
+	camera.position.y += ((mouseY/screenHeight)*cameraPower.y+cameraOffset.y-camera.position.y)*coeff;
+	camera.position.z += ((mouseY/screenHeight)*cameraPower.z+cameraOffset.z-camera.position.z)*coeff;//45
+	camera.position.x += ((mouseX/screenWidth)*cameraPower.x+cameraOffset.x-camera.position.x)*coeff;
 	camera.lookAt(new THREE.Vector3(0,6.8,0));
-		
-	requestAnimationFrame( animate );
-	stats.update();
-	if(state==1){
+
+	if(state>=1){
 		sapin.update((mouseX>screenWidth/2));
 	}
+	
+	stats.update();
+	if(state==2){
+		var freqByteData = new Uint8Array(analyser.frequencyBinCount);
+		analyser.getByteFrequencyData(freqByteData); //analyser.getByteTimeDomainData(freqByteData);
+
+		var OFFSET = 100;
+		
+		var magnitude = freqByteData[OFFSET];
+		if(magnitude>145){
+			new SapinPop(scene,Math.PI*2*Math.random(),30+Math.random()*35, Math.random()*.05+.1)
+			treeCount++;
+			if(treeCount>=300){
+				setTimeout(function(){
+  					$('body').css('cursor','pointer'); 
+					star.merryChristmas();
+					state = 4;
+				},10000);
+				state = 3;
+				TweenLite.to(cameraOffset, 3, {y : 70, z : 135, x : 0});
+				TweenLite.to(cameraPower, 3, {y : 240, z : 175, x : 280});
+			}
+		}
+	}
+
+	if(state >= 4){
+		var freqByteData = new Uint8Array(analyser.frequencyBinCount);
+		analyser.getByteFrequencyData(freqByteData); //analyser.getByteTimeDomainData(freqByteData);
+
+		var OFFSET = 100;
+		
+		var magnitude = freqByteData[OFFSET];
+		if(magnitude==0) {
+	  		effectFilm.uniforms.grayscale.value = true;
+	  		// state = 0;
+		}
+	}
+
 	star.update();
 	composer.render( 0.00001 );
+
+	requestAnimationFrame( animate );
 }
 
 function onDocumentMouseMove(event) {
