@@ -127,7 +127,6 @@ letters.push ([[0,1,1,1,1],
             ]);
 var Star = function(scene)
 {
-	this;
 	scene = scene;
     this.particlesGeo = new THREE.Geometry();
 

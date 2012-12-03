@@ -139,7 +139,6 @@ function init() {
 }
 
 function animate() {
-	console.log(analyser);
 	var coeff = 0.05;
 	camera.position.y += ((mouseY/screenHeight)*50+45-camera.position.y)*coeff;
 	camera.position.z += ((mouseY/screenHeight)*60+105-camera.position.z)*coeff;//45
