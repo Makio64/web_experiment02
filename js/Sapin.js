@@ -52,7 +52,7 @@ var Sapin = function(scene)
         };
     }
     // map: sprite, blending:THREE.AdditiveBlending, transparent : true 
-    material = new THREE.ParticleBasicMaterial( { size: .3, color:0xFFFFFF } );
+    material = new THREE.ParticleBasicMaterial( { size: .6, color:0xFFFFFF } );
     particleSystem = new THREE.ParticleSystem(scope.particlesGeo, material);
     
     scene.add( particleSystem );
