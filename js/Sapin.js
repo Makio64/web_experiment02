@@ -1,37 +1,36 @@
 /**
 * Makio - @Makio64 - www.makiopolis.com
 */
+var sapinVectors = [{x:0,y:0},{x:1,y:0},{x:1,y:3},{x:4,y:3},{x:2,y:6},{x:3,y:6},{x:1,y:9},{x:2,y:9},{x:0,y:13}];
 
 var Sapin = function(scene)
 {
-	scope = this;
-	scope.scene = scene;
-	scope.lines = [];
-	scope.geometry = new THREE.Geometry()
-	scope.material = new THREE.LineBasicMaterial({
+	this.scene = scene;
+	this.lines = [];
+	this.geometry = new THREE.Geometry()
+	this.material = new THREE.LineBasicMaterial({
         color: 0xFFFFFF,
     });
-    scope.vx = 0;
-    scope.ax = 0;
-    scope.speed = 0;
+    this.vx = 0;
+    this.ax = 0;
+    this.speed = 0;
 
     var vectors = [{x:0,y:0},{x:1,y:0},{x:1,y:3},{x:4,y:3},{x:2,y:6},{x:3,y:6},{x:1,y:9},{x:2,y:9},{x:0,y:13}];
 
-   //  for (var i = 0; i < vectors.length; i++) {
-   //  	scope.geometry.vertices.push(new THREE.Vector3(vectors[i].y,0,vectors[i].x));
-   //  };
+    for (var i = 0; i < vectors.length; i++) {
+    	this.geometry.vertices.push(new THREE.Vector3(vectors[i].y,0,vectors[i].x));
+    };
 
-   // for (var i = vectors.length - 2; i >= 0; i--) {
-   //  	scope.geometry.vertices.push(new THREE.Vector3(vectors[i].y,0,-vectors[i].x));
-   //  };
+   for (var i = vectors.length - 2; i >= 0; i--) {
+    	this.geometry.vertices.push(new THREE.Vector3(vectors[i].y,0,-vectors[i].x));
+    };
 
-   //  var line = new THREE.Line(scope.geometry, scope.material);
-    // scope.rotation = line.rotation;
+    var line = new THREE.Line(this.geometry, this.material);
+    this.rotation = line.rotation;
 
-    scope.particlesGeo = new THREE.Geometry();
-    scope.values = [];
+    this.particlesGeo = new THREE.Geometry();
+    this.values = [];
     
-    var sprite = THREE.ImageUtils.loadTexture( "img/circle.png" );
 
     for (var i = 1; i < vectors.length; i++) {
         var start = vectors[i-1]; 
@@ -40,34 +39,42 @@ var Sapin = function(scene)
         for (var j = 0; j < division; j++) {
             var vertex = new THREE.Vector3();
             vertex.x = start.x + (dest.x-start.x)*j/division;
-            scope.values.push({coeff:vertex.x,x:0});
+            this.values.push({coeff:vertex.x,x:0});
             vertex.y = start.y + (dest.y-start.y)*j/division;
-            scope.particlesGeo.vertices.push( vertex );
+            this.particlesGeo.vertices.push( vertex );
             
             vertex = new THREE.Vector3();
             vertex.x = -(start.x + (dest.x-start.x)*j/division);
-            scope.values.push({coeff:vertex.x,x:Math.PI});
+            this.values.push({coeff:vertex.x,x:Math.PI});
             vertex.y = start.y + (dest.y-start.y)*j/division;
-            scope.particlesGeo.vertices.push( vertex );
+            this.particlesGeo.vertices.push( vertex );
         };
     }
-    // map: sprite, blending:THREE.AdditiveBlending, transparent : true 
-    material = new THREE.ParticleBasicMaterial( { size: .6, color:0xFFFFFF } );
-    particleSystem = new THREE.ParticleSystem(scope.particlesGeo, material);
-    
-    scene.add( particleSystem );
 
-    scope.update = function(scroll) 
+    if(navigator.appVersion.indexOf("Mac")!=-1){
+        console.log("mac");
+        this.material = new THREE.ParticleBasicMaterial( { size: 0.3, depthTest: false, color:0xFFFFFF } );
+    } else {
+        console.log("windows");
+        var sprite = THREE.ImageUtils.loadTexture( "img/circle.png" );
+        this.material = new THREE.ParticleBasicMaterial( { size: .5,  depthTest: false, map: sprite, blending:THREE.AdditiveBlending,  transparent : true  } );
+    }
+    this.particleSystem = new THREE.ParticleSystem(this.particlesGeo, this.material);
+    this.particleSystem.sortParticles = false;
+
+    scene.add( this.particleSystem );
+
+    this.update = function(scroll) 
     {    
         if(scroll) {
-            scope.ax += Math.PI/40;
+            this.ax += Math.PI/40;
         } else {
-            scope.ax -= Math.PI/40; 
+            this.ax -= Math.PI/40; 
         }
-        scope.vx += scope.ax;
-        scope.speed += scope.vx;
-        var s = scope.speed;
-        if(scope.speed=0)
+        this.vx += this.ax;
+        this.speed += this.vx;
+        var s = this.speed;
+        if(this.speed=0)
             return;
         var coeffX = 2;
         var coeffZ = 2;
@@ -76,19 +83,19 @@ var Sapin = function(scene)
         var basevx = tmpvx = Math.PI*degreeMax/180;
         var p;
         var v;
-        var deceleration = basevx/4000;
-        var l = scope.particlesGeo.vertices.length;
+        var deceleration = basevx/1900;
+        var l = this.particlesGeo.vertices.length;
         for (var i = 0; i < l; i++) {
             if(tmpvx<0)
                 return;
-            p = scope.particlesGeo.vertices[i];
-            v = scope.values[i];
+            p = this.particlesGeo.vertices[i];
+            v = this.values[i];
             v.x += tmpvx;
             p.x = Math.cos(v.x)*v.coeff; 
             p.z = Math.sin(v.x)*v.coeff; 
             tmpvx -= deceleration;
         };
-        scope.particlesGeo.verticesNeedUpdate = true;
+        this.particlesGeo.verticesNeedUpdate = true;
     }
 }
 

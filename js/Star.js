@@ -127,10 +127,8 @@ letters.push ([[0,1,1,1,1],
             ]);
 var Star = function(scene)
 {
-	scene = scene;
+    this.scene = scene;
     this.particlesGeo = new THREE.Geometry();
-
-    var sprite = THREE.ImageUtils.loadTexture( "img/circle.png" );
 
     var max = 600;
     this.radius = 90;
@@ -142,9 +140,9 @@ var Star = function(scene)
         this.particlesGeo.vertices.push( vertex );
     };
 
-    material = new THREE.ParticleBasicMaterial( { size: 0.3, color:0xFFFFFF } );
-    particleSystem = new THREE.ParticleSystem(this.particlesGeo, material);
-    
+    this.material = new THREE.ParticleBasicMaterial( { size: 0.3, depthTest: false, color:0xFFFFFF } );
+    this.particleSystem = new THREE.ParticleSystem(this.particlesGeo, this.material);
+    this.particleSystem.sortParticles = false;
     
     
     this.madeLetter = function(l,tweenable,duration, clean, fromIndex)
@@ -153,7 +151,7 @@ var Star = function(scene)
         var vertice;
         var k=clean;
         var offsetY = 15;
-        var offsetX = -l.length*2;
+        var offsetX = -l.length*2+1;
         this.randomize(clean,fromIndex)
         for (var n = 0; n < l.length; n++) {
             var letter = letters[l[n]];
@@ -179,9 +177,9 @@ var Star = function(scene)
     this.update = function() 
     {    
         this.particlesGeo.verticesNeedUpdate = true;
-        particleSystem.position.x = Math.random()*0.03;
-        particleSystem.position.y = Math.random()*0.03;
-        particleSystem.position.z = Math.random()*0.03;
+        this.particleSystem.position.x = Math.random()*0.03;
+        this.particleSystem.position.y = Math.random()*0.03;
+        this.particleSystem.position.z = Math.random()*0.03;
     }
 
     this.start = function()
@@ -200,7 +198,7 @@ var Star = function(scene)
     }
 
     this.madeLetter([4,5,1,6,7,8,9], true,.8,0,0);
-    scene.add( particleSystem );
+    this.scene.add( this.particleSystem );
 }
 
 Star.prototype.constructor = Star;

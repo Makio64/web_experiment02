@@ -5,8 +5,10 @@ windowHalfX = $(window).width()/2,
 windowHalfY = $(window).height()/2,
 isWebGL = Detector.webgl,
 tanFOV, windowHeight,
-stats, container, camera, scene, renderer, composer, analyser,
-state = 0;
+stats, container, camera, scene, renderer, composer, analyser, renderTargetParameters,
+state = 0, 
+cameraOffset = {x:0,y:0,z:0};
+
 
 
 $(document).ready(function() 
@@ -25,7 +27,10 @@ function initScene(){
 	windowHeight =  $(window).height();
 
 	camera.aspect = $(window).width() / Math.floor($(window).height());
-	camera.position.set(0, 15, 45);
+	cameraOffset.x = 0;
+	cameraOffset.y = 45;
+	cameraOffset.z = 105;
+	camera.position.set(cameraOffset.x, cameraOffset.y, cameraOffset.z);
     camera.lookAt(new THREE.Vector3(0,6.8,0));
 	camera.updateProjectionMatrix();
 	
@@ -50,7 +55,9 @@ function initScene(){
 	effectFocus.uniforms[ "screenHeight" ].value = screenHeight;
 	effectFocus.renderToScreen = true;
 
-	composer = new THREE.EffectComposer( renderer );
+	renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: true };
+
+	composer = new THREE.EffectComposer( renderer, new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters) );
 
 	composer.addPass( renderModel );
 	composer.addPass( effectBloom );
@@ -73,7 +80,7 @@ function initScene(){
 		camera.lookAt(new THREE.Vector3(0,6.8,0));
 		
 		camera.updateProjectionMatrix();
-		composer.reset( new THREE.WebGLRenderTarget( screenWidth, screenHeight ) );
+		composer.reset( new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters));
 	});
 }
 
@@ -89,7 +96,9 @@ function init() {
 	);
 	cube.position.y = -1;
 	// scene.add(cube);
-
+	cameraYOffset = 45;
+	cameraZOffset = 105;
+	cameraXOffset = 0;
 	for (var i = 0; i < 10; i++) {
 		h = Math.random()*2+.5;
 		cube = new THREE.Mesh(
@@ -104,6 +113,7 @@ function init() {
 		cube.position.z = Math.sin(angle)*radius;
 		scene.add(cube);
 	}
+
 	sapin = new Sapin(scene);
 	star = new Star(scene);	
 
@@ -118,6 +128,7 @@ function init() {
 	  				if(state==1){
 	  					return;
 	  				}
+					TweenLite.to(cameraOffset, 2.5, {y : 25, z : 75, x : 0});
 	  				setTimeout(function() { state = 1; },4000);
 	  				star.randomize(139,93);
 	    			audio.play();
@@ -140,9 +151,9 @@ function init() {
 
 function animate() {
 	var coeff = 0.05;
-	camera.position.y += ((mouseY/screenHeight)*50+45-camera.position.y)*coeff;
-	camera.position.z += ((mouseY/screenHeight)*60+105-camera.position.z)*coeff;//45
-	camera.position.x += ((mouseX/screenWidth)*60-camera.position.x)*coeff;
+	camera.position.y += ((mouseY/screenHeight)*60+cameraOffset.y-camera.position.y)*coeff;
+	camera.position.z += ((mouseY/screenHeight)*70+cameraOffset.z-camera.position.z)*coeff;//45
+	camera.position.x += ((mouseX/screenWidth)*80+cameraOffset.x-camera.position.x)*coeff;
 	camera.lookAt(new THREE.Vector3(0,6.8,0));
 		
 	requestAnimationFrame( animate );
